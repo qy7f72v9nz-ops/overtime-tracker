@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Overtime">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23667eea'/><text x='50' y='62' font-size='50' text-anchor='middle' fill='white'>⏱️</text></svg>">
+    <title>Overtime Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-bg-solid: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: rgba(0, 0, 0, 0.1);
+            --text-primary: rgba(0, 0, 0, 0.85);
+            --text-secondary: rgba(0, 0, 0, 0.55);
+            --text-tertiary: rgba(0, 0, 0, 0.35);
+            --accent-blue: #007AFF;
+            --accent-green: #34C759;
+            --accent-orange: #FF9500;
+            --accent-red: #FF3B30;
+            --accent-purple: #AF52DE;
+            --blur-amount: 40px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            min-height: 100dvh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #fda085 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            overflow-x: hidden;
+            padding: 20px;
+            padding-top: max(env(safe-area-inset-top), 20px);
+            padding-bottom: max(env(safe-area-inset-bottom), 20px);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 400;
+        }
+
+        .install-banner {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .install-banner.show {
+            display: flex;
+        }
+
+        .install-banner p {
+            font-size: 13px;
+            color: white;
+            flex: 1;
+        }
+
+        .install-banner button {
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .install-banner .close-banner {
+            background: transparent;
+            color: white;
+            padding: 4px 8px;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px var(--glass-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.4), inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .glass-card:nth-child(2) { animation-delay: 0.1s; }
+        .glass-card:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title .icon {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+
+        .date-selector {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .date-nav-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .date-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        .date-nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        .date-display {
+            flex: 1;
+            text-align: center;
+        }
+
+        .date-display .day {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .date-display .full-date {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .overtime-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .overtime-input-card {
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .overtime-input-card.before {
+            border-top: 3px solid var(--accent-orange);
+        }
+
+        .overtime-input-card.after {
+            border-top: 3px solid var(--accent-blue);
+        }
+
+        .overtime-input-card:focus-within {
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+
+        .overtime-input-card .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .time-input-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .time-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .time-input-group span {
+            font-size: 10px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+        }
+
+        .time-stepper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .time-stepper input {
+            width: 52px;
+            height: 48px;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            text-align: center;
+            font-family: inherit;
+            -moz-appearance: textfield;
+        }
+
+        .time-stepper input::-webkit-outer-spin-button,
+        .time-stepper input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .time-stepper input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .stepper-btn {
+            width: 52px;
+            height: 28px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            color: var(--text-secondary);
+        }
+
+        .stepper-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .stepper-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .time-separator {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: 0 2px;
+            margin-top: -20px;
+        }
+
+        .total-overtime {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.2), rgba(52, 199, 89, 0.2));
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .total-overtime .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .total-overtime .value {
+            font-size: 42px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.1;
+        }
+
+        .total-overtime .subtext {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 17px;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-blue), #5856D6);
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
+            margin-top: 16px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 122, 255, 0.4);
+        }
+
+        .save-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .save-btn.saved {
+            background: linear-gradient(135deg, var(--accent-green), #30B553);
+        }
+
+        .quick-add {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .quick-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-primary);
+        }
+
+        .quick-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tab-bar {
+            display: flex;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 4px;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease-out backwards;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--glass-bg-solid);
+            color: var(--text-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin: -8px;
+            padding: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .history-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .history-item:hover {
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .history-item .date-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .history-item .day-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .history-item .date-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .history-item .overtime-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .history-item .ot-badge {
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-item .ot-badge.before {
+            background: rgba(255, 149, 0, 0.2);
+            color: #CC7700;
+        }
+
+        .history-item .ot-badge.after {
+            background: rgba(0, 122, 255, 0.2);
+            color: #0055CC;
+        }
+
+        .history-item .total {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .history-item .delete-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 59, 48, 0.1);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        .history-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .history-item .delete-btn:hover {
+            background: rgba(255, 59, 48, 0.2);
+        }
+
+        .history-item .delete-btn svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent-red);
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .summary-stat {
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .summary-stat .label {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+
+        .summary-stat .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-stat .unit {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            padding: 14px 24px;
+            box-shadow: 0 8px 32px var(--glass-shadow);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast p {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(var(--blur-amount));
+            -webkit-backdrop-filter: blur(var(--blur-amount));
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 24px;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .modal-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-btn.cancel {
+            background: rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+
+        .modal-btn.cancel:hover {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-btn.confirm {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        .modal-btn.confirm:hover {
+            background: #E8342A;
+        }
+
+        /* Settings styles */
+        .settings-section {
+            margin-bottom: 20px;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 8px;
+        }
+
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-item .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .settings-item .item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-item .item-icon.blue { background: rgba(0, 122, 255, 0.2); color: var(--accent-blue); }
+        .settings-item .item-icon.green { background: rgba(52, 199, 89, 0.2); color: var(--accent-green); }
+        .settings-item .item-icon.purple { background: rgba(175, 82, 222, 0.2); color: var(--accent-purple); }
+        .settings-item .item-icon.orange { background: rgba(255, 149, 0, 0.2); color: var(--accent-orange); }
+        .settings-item .item-icon.red { background: rgba(255, 59, 48, 0.2); color: var(--accent-red); }
+
+        .settings-item .item-icon svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .settings-item .item-text h4 {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .settings-item .item-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .settings-item .item-action {
+            color: var(--text-tertiary);
+        }
+
+        .settings-item .item-action svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .settings-btn {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--glass-bg-solid);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 14px;
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            text-align: left;
+            margin-bottom: 8px;
+        }
+
+        .settings-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.55);
+        }
+
+        .settings-btn:active {
+            transform: scale(0.98);
+        }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: rgba(52, 199, 89, 0.15);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+
+        .sync-status.warning {
+            background: rgba(255, 149, 0, 0.15);
+        }
+
+        .sync-status svg {
+            width: 18px;
+            height: 18px;
+            color: var(--accent-green);
+        }
+
+        .sync-status.warning svg {
+            color: var(--accent-orange);
+        }
+
+        .sync-status p {
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .sync-status span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        /* File input hidden */
+        .hidden-input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>⏱️ Overtime</h1>
+            <p>Track your extra hours</p>
+        </header>
+
+        <div class="install-banner" id="install-banner">
+            <p>Install app for the best experience</p>
+            <button id="install-btn">Install</button>
+            <button class="close-banner" id="close-banner">✕</button>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="record">Record</button>
+            <button class="tab-btn" data-tab="history">History</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+
+        <div id="record-tab" class="tab-content active">
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Select Date
+                </div>
+                <div class="date-selector">
+                    <button class="date-nav-btn" id="prev-day">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="date-display">
+                        <div class="day" id="day-name">Today</div>
+                        <div class="full-date" id="full-date">Saturday, 10 Jan</div>
+                    </div>
+                    <button class="date-nav-btn" id="next-day">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Enter Overtime
+                </div>
+                
+                <div class="overtime-inputs">
+                    <div class="overtime-input-card before">
+                        <div class="label">Before Shift</div>
+                        <div class="time-input-wrapper">
+                            <div class="time-input-group">
+                                <div class="time-stepper">
+                                    <button class="stepper-btn" data-target="before-hours" data-action="up">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                    <input type="number" id="before-hours" value="0" min="0" max="12">
+                                    <button class="stepper-btn" data-target="before-hours" data-action="down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span>hrs</span>
+                            </div>
+                            <span class="time-separator">:</span>
+                            <div class="time-input-group">
+                                <div class="time-stepper">
+                                    <button class="stepper-btn" data-target="before-mins" data-action="up">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                    <input type="number" id="before-mins" value="0" min="0" max="59">
+                                    <button class="stepper-btn" data-target="before-mins" data-action="down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span>mins</span>
+                            </div>
+                        </div>
+                        <div class="quick-add">
+                            <button class="quick-btn" data-target="before" data-mins="15">+15m</button>
+                            <button class="quick-btn" data-target="before" data-mins="30">+30m</button>
+                            <button class="quick-btn" data-target="before" data-mins="60">+1h</button>
+                        </div>
+                    </div>
+
+                    <div class="overtime-input-card after">
+                        <div class="label">After Shift</div>
+                        <div class="time-input-wrapper">
+                            <div class="time-input-group">
+                                <div class="time-stepper">
+                                    <button class="stepper-btn" data-target="after-hours" data-action="up">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                    <input type="number" id="after-hours" value="0" min="0" max="12">
+                                    <button class="stepper-btn" data-target="after-hours" data-action="down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span>hrs</span>
+                            </div>
+                            <span class="time-separator">:</span>
+                            <div class="time-input-group">
+                                <div class="time-stepper">
+                                    <button class="stepper-btn" data-target="after-mins" data-action="up">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="18 15 12 9 6 15"></polyline>
+                                        </svg>
+                                    </button>
+                                    <input type="number" id="after-mins" value="0" min="0" max="59">
+                                    <button class="stepper-btn" data-target="after-mins" data-action="down">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span>mins</span>
+                            </div>
+                        </div>
+                        <div class="quick-add">
+                            <button class="quick-btn" data-target="after" data-mins="15">+15m</button>
+                            <button class="quick-btn" data-target="after" data-mins="30">+30m</button>
+                            <button class="quick-btn" data-target="after" data-mins="60">+1h</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="total-overtime">
+                    <div class="label">Total Overtime</div>
+                    <div class="value" id="total-ot">0:00</div>
+                    <div class="subtext" id="total-ot-mins">0 minutes today</div>
+                </div>
+                <button class="save-btn" id="save-btn">Save Overtime</button>
+            </div>
+        </div>
+
+        <div id="history-tab" class="tab-content">
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                    This Week's Summary
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-stat">
+                        <div class="label">Total</div>
+                        <div class="value" id="week-total">0:00</div>
+                        <div class="unit">hours</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="label">Before</div>
+                        <div class="value" id="week-before">0:00</div>
+                        <div class="unit">hours</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="label">After</div>
+                        <div class="value" id="week-after">0:00</div>
+                        <div class="unit">hours</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Recent Entries
+                </div>
+                <div class="history-list" id="history-list">
+                    <div class="empty-state">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <p>No overtime recorded yet.<br>Start tracking to see your history.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settings-tab" class="tab-content">
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Backup & Sync
+                </div>
+
+                <div class="sync-status" id="sync-status">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    <div>
+                        <p id="sync-text">Data stored locally</p>
+                        <span id="sync-detail">Last backup: Never</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <button class="settings-btn" onclick="backupToFile()">
+                        <div class="item-icon blue">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="item-text">
+                            <h4>Backup to File</h4>
+                            <p>Save to iCloud Drive for sync</p>
+                        </div>
+                        <div class="item-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+                    </button>
+
+                    <button class="settings-btn" onclick="document.getElementById('restore-input').click()">
+                        <div class="item-icon green">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                        </div>
+                        <div class="item-text">
+                            <h4>Restore from Backup</h4>
+                            <p>Import from iCloud Drive</p>
+                        </div>
+                        <div class="item-action">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </div>
+                    </button>
+                    <input type="file" id="restore-input" class="hidden-input" accept=".json" onchange="restoreFromFile(event)">
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                    Export
+                </div>
+
+                <button class="settings-btn" onclick="exportData()">
+                    <div class="item-icon purple">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="item-text">
+                        <h4>Export to CSV</h4>
+                        <p>Download spreadsheet format</p>
+                    </div>
+                    <div class="item-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Data Management
+                </div>
+
+                <button class="settings-btn" onclick="clearData()">
+                    <div class="item-icon red">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </div>
+                    <div class="item-text">
+                        <h4>Clear All Records</h4>
+                        <p>Delete all overtime data</p>
+                    </div>
+                    <div class="item-action">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-title">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    About
+                </div>
+                <div class="sync-status">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <div>
+                        <p>Overtime Tracker v1.0</p>
+                        <span>Made for postmen who go the extra mile</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <p><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> <span id="toast-message">Saved!</span></p>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content">
+            <h3>Clear All Records?</h3>
+            <p>This will delete all your overtime records. This cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="modal-cancel">Cancel</button>
+                <button class="modal-btn confirm" id="modal-confirm">Clear All</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker for PWA (only works when hosted on a server)
+        if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration skipped'));
+        }
+
+        // PWA Install prompt
+        let deferredPrompt;
+        const installBanner = document.getElementById('install-banner');
+        const installBtn = document.getElementById('install-btn');
+        const closeBanner = document.getElementById('close-banner');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.add('show');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                installBanner.classList.remove('show');
+            }
+        });
+
+        closeBanner.addEventListener('click', () => {
+            installBanner.classList.remove('show');
+        });
+
+        // Check if running as PWA
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            installBanner.classList.remove('show');
+        }
+
+        // State
+        let selectedDate = new Date();
+        let overtimeRecords = JSON.parse(localStorage.getItem('overtimeRecords') || '[]');
+
+        // Elements
+        const dayNameEl = document.getElementById('day-name');
+        const fullDateEl = document.getElementById('full-date');
+        const beforeHoursEl = document.getElementById('before-hours');
+        const beforeMinsEl = document.getElementById('before-mins');
+        const afterHoursEl = document.getElementById('after-hours');
+        const afterMinsEl = document.getElementById('after-mins');
+        const totalOtEl = document.getElementById('total-ot');
+        const totalOtMinsEl = document.getElementById('total-ot-mins');
+        const historyListEl = document.getElementById('history-list');
+        const weekTotalEl = document.getElementById('week-total');
+        const weekBeforeEl = document.getElementById('week-before');
+        const weekAfterEl = document.getElementById('week-after');
+
+        function init() {
+            updateDateDisplay();
+            loadRecordForDate();
+            renderHistory();
+            updateWeekSummary();
+            updateSyncStatus();
+
+            document.getElementById('prev-day').addEventListener('click', () => changeDate(-1));
+            document.getElementById('next-day').addEventListener('click', () => changeDate(1));
+            
+            [beforeHoursEl, beforeMinsEl, afterHoursEl, afterMinsEl].forEach(el => {
+                el.addEventListener('input', handleInputChange);
+                el.addEventListener('change', handleInputChange);
+            });
+
+            document.querySelectorAll('.stepper-btn').forEach(btn => {
+                btn.addEventListener('click', handleStepperClick);
+            });
+
+            document.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', handleQuickAdd);
+            });
+
+            document.getElementById('save-btn').addEventListener('click', saveRecord);
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+
+            // Modal handlers
+            document.getElementById('modal-confirm').addEventListener('click', confirmClear);
+            document.getElementById('modal-cancel').addEventListener('click', cancelClear);
+        }
+
+        function handleInputChange(e) {
+            let value = parseInt(e.target.value) || 0;
+            const isMinutes = e.target.id.includes('mins');
+            value = isMinutes ? Math.max(0, Math.min(59, value)) : Math.max(0, Math.min(12, value));
+            e.target.value = value;
+            updateTotal();
+        }
+
+        function handleStepperClick(e) {
+            const btn = e.currentTarget;
+            const targetId = btn.dataset.target;
+            const action = btn.dataset.action;
+            const input = document.getElementById(targetId);
+            const isMinutes = targetId.includes('mins');
+            
+            let value = parseInt(input.value) || 0;
+            const max = isMinutes ? 59 : 12;
+            const step = isMinutes ? 5 : 1;
+            
+            value = action === 'up' ? Math.min(max, value + step) : Math.max(0, value - step);
+            input.value = value;
+            updateTotal();
+        }
+
+        function handleQuickAdd(e) {
+            const btn = e.currentTarget;
+            const target = btn.dataset.target;
+            const mins = parseInt(btn.dataset.mins);
+            
+            const hoursEl = document.getElementById(`${target}-hours`);
+            const minsEl = document.getElementById(`${target}-mins`);
+            
+            let totalMins = (parseInt(hoursEl.value) || 0) * 60 + (parseInt(minsEl.value) || 0);
+            totalMins = Math.min(totalMins + mins, 12 * 60);
+            
+            hoursEl.value = Math.floor(totalMins / 60);
+            minsEl.value = totalMins % 60;
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const beforeMins = (parseInt(beforeHoursEl.value) || 0) * 60 + (parseInt(beforeMinsEl.value) || 0);
+            const afterMins = (parseInt(afterHoursEl.value) || 0) * 60 + (parseInt(afterMinsEl.value) || 0);
+            const totalMins = beforeMins + afterMins;
+            
+            totalOtEl.textContent = `${Math.floor(totalMins / 60)}:${(totalMins % 60).toString().padStart(2, '0')}`;
+            totalOtMinsEl.textContent = `${totalMins} minutes today`;
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+
+        function changeDate(delta) {
+            selectedDate.setDate(selectedDate.getDate() + delta);
+            updateDateDisplay();
+            loadRecordForDate();
+        }
+
+        function updateDateDisplay() {
+            const today = new Date();
+            const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+            const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
+
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            if (selectedDate.toDateString() === today.toDateString()) {
+                dayNameEl.textContent = 'Today';
+            } else if (selectedDate.toDateString() === yesterday.toDateString()) {
+                dayNameEl.textContent = 'Yesterday';
+            } else if (selectedDate.toDateString() === tomorrow.toDateString()) {
+                dayNameEl.textContent = 'Tomorrow';
+            } else {
+                dayNameEl.textContent = days[selectedDate.getDay()];
+            }
+            fullDateEl.textContent = `${days[selectedDate.getDay()]}, ${selectedDate.getDate()} ${months[selectedDate.getMonth()]}`;
+        }
+
+        function loadRecordForDate() {
+            const dateKey = getDateKey(selectedDate);
+            const record = overtimeRecords.find(r => r.date === dateKey);
+            
+            if (record) {
+                beforeHoursEl.value = Math.floor(record.beforeOT / 60);
+                beforeMinsEl.value = record.beforeOT % 60;
+                afterHoursEl.value = Math.floor(record.afterOT / 60);
+                afterMinsEl.value = record.afterOT % 60;
+            } else {
+                beforeHoursEl.value = 0;
+                beforeMinsEl.value = 0;
+                afterHoursEl.value = 0;
+                afterMinsEl.value = 0;
+            }
+            updateTotal();
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function minutesToTime(minutes) {
+            return `${Math.floor(Math.abs(minutes) / 60)}:${(Math.abs(minutes) % 60).toString().padStart(2, '0')}`;
+        }
+
+        function saveRecord() {
+            const beforeOT = (parseInt(beforeHoursEl.value) || 0) * 60 + (parseInt(beforeMinsEl.value) || 0);
+            const afterOT = (parseInt(afterHoursEl.value) || 0) * 60 + (parseInt(afterMinsEl.value) || 0);
+            const totalOT = beforeOT + afterOT;
+            const dateKey = getDateKey(selectedDate);
+
+            overtimeRecords = overtimeRecords.filter(r => r.date !== dateKey);
+
+            if (totalOT > 0) {
+                overtimeRecords.push({ date: dateKey, beforeOT, afterOT, totalOT });
+            }
+
+            overtimeRecords.sort((a, b) => new Date(b.date) - new Date(a.date));
+            localStorage.setItem('overtimeRecords', JSON.stringify(overtimeRecords));
+            
+            renderHistory();
+            updateWeekSummary();
+            showToast('Overtime saved!');
+
+            const btn = document.getElementById('save-btn');
+            btn.classList.add('saved');
+            btn.textContent = '✓ Saved';
+            setTimeout(() => { btn.classList.remove('saved'); btn.textContent = 'Save Overtime'; }, 2000);
+        }
+
+        function renderHistory() {
+            if (overtimeRecords.length === 0) {
+                historyListEl.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><p>No overtime recorded yet.<br>Start tracking to see your history.</p></div>`;
+                return;
+            }
+
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            historyListEl.innerHTML = overtimeRecords.slice(0, 20).map(record => {
+                const date = new Date(record.date + 'T00:00:00');
+                return `
+                    <div class="history-item" data-date="${record.date}">
+                        <div class="date-info">
+                            <span class="day-name">${days[date.getDay()]}</span>
+                            <span class="date-text">${date.getDate()} ${months[date.getMonth()]}</span>
+                        </div>
+                        <div class="overtime-info">
+                            ${record.beforeOT > 0 ? `<span class="ot-badge before">${minutesToTime(record.beforeOT)}</span>` : ''}
+                            ${record.afterOT > 0 ? `<span class="ot-badge after">${minutesToTime(record.afterOT)}</span>` : ''}
+                            <span class="total">${minutesToTime(record.totalOT)}</span>
+                            <button class="delete-btn" onclick="deleteRecord('${record.date}')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteRecord(dateKey) {
+            overtimeRecords = overtimeRecords.filter(r => r.date !== dateKey);
+            localStorage.setItem('overtimeRecords', JSON.stringify(overtimeRecords));
+            renderHistory();
+            updateWeekSummary();
+            showToast('Record deleted');
+        }
+
+        function updateWeekSummary() {
+            const today = new Date();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay());
+            weekStart.setHours(0, 0, 0, 0);
+
+            const weekRecords = overtimeRecords.filter(r => {
+                const recordDate = new Date(r.date + 'T00:00:00');
+                return recordDate >= weekStart;
+            });
+
+            const totalBefore = weekRecords.reduce((sum, r) => sum + r.beforeOT, 0);
+            const totalAfter = weekRecords.reduce((sum, r) => sum + r.afterOT, 0);
+            const total = totalBefore + totalAfter;
+
+            weekTotalEl.textContent = minutesToTime(total);
+            weekBeforeEl.textContent = minutesToTime(totalBefore);
+            weekAfterEl.textContent = minutesToTime(totalAfter);
+        }
+
+        function updateSyncStatus() {
+            const lastBackup = localStorage.getItem('lastBackup');
+            const syncDetail = document.getElementById('sync-detail');
+            
+            if (lastBackup) {
+                const date = new Date(lastBackup);
+                syncDetail.textContent = `Last backup: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+            } else {
+                syncDetail.textContent = 'Last backup: Never';
+            }
+        }
+
+        // Backup to JSON file (save to iCloud Drive)
+        function backupToFile() {
+            const data = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                records: overtimeRecords
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `overtime-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            localStorage.setItem('lastBackup', new Date().toISOString());
+            updateSyncStatus();
+            showToast('Backup saved! Move to iCloud Drive to sync.');
+        }
+
+        // Restore from JSON file
+        function restoreFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.records && Array.isArray(data.records)) {
+                        overtimeRecords = data.records;
+                        localStorage.setItem('overtimeRecords', JSON.stringify(overtimeRecords));
+                        renderHistory();
+                        updateWeekSummary();
+                        loadRecordForDate();
+                        showToast(`Restored ${data.records.length} records!`);
+                    } else {
+                        showToast('Invalid backup file');
+                    }
+                } catch (err) {
+                    showToast('Error reading backup file');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // Export to CSV
+        function exportData() {
+            if (overtimeRecords.length === 0) {
+                showToast('No data to export');
+                return;
+            }
+
+            const headers = ['Date', 'Before Shift (mins)', 'After Shift (mins)', 'Total (mins)'];
+            const rows = overtimeRecords.map(r => [r.date, r.beforeOT, r.afterOT, r.totalOT]);
+            const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `overtime-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('CSV exported!');
+        }
+
+        // Clear all data
+        function clearData() {
+            document.getElementById('confirm-modal').classList.add('show');
+        }
+
+        function confirmClear() {
+            overtimeRecords = [];
+            localStorage.removeItem('overtimeRecords');
+            renderHistory();
+            updateWeekSummary();
+            loadRecordForDate();
+            document.getElementById('confirm-modal').classList.remove('show');
+            showToast('All records cleared');
+        }
+
+        function cancelClear() {
+            document.getElementById('confirm-modal').classList.remove('show');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Expose functions to global scope
+        window.deleteRecord = deleteRecord;
+        window.clearData = clearData;
+        window.backupToFile = backupToFile;
+        window.restoreFromFile = restoreFromFile;
+        window.exportData = exportData;
+
+        init();
+    </script>
+</body>
+</html>
