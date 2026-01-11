@@ -1,6 +1,7 @@
 const CACHE_NAME = 'overtime-tracker-v1';
 const urlsToCache = [
-  'overtime-tracker.html'
+  './',
+  './index.html'
 ];
 
 // Install event - cache files
@@ -11,6 +12,7 @@ self.addEventListener('install', event => {
         return cache.addAll(urlsToCache);
       })
   );
+  self.skipWaiting();
 });
 
 // Fetch event - serve from cache, fallback to network
@@ -40,4 +42,5 @@ self.addEventListener('activate', event => {
       );
     })
   );
+  self.clients.claim();
 });
